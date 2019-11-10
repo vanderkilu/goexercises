@@ -1,2 +1,0 @@
-Error: 2019/11/10 18:09:39 main.go:36: testing the error log
-Error: 2019/11/10 18:11:26 main.go:36: testing the error log
