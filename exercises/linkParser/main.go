@@ -6,7 +6,6 @@ import (
 	"log"
 	"fmt"
 	"strings"
-	"encoding/json"
 )
 
 type Link struct {
@@ -66,12 +65,10 @@ var htmlTemplate string = `
       Gophercises is on <strong>Github</strong>!
     </a>
   </div>
-</body>
-</html>
+</section>
 `
 
 func main() {
 	links := LinkParser(strings.NewReader(htmlTemplate))
-	linksToJson, _ := json.Marshal(&links)
-	fmt.Println(string(linksToJson))
+	fmt.Println(links)	
 }
