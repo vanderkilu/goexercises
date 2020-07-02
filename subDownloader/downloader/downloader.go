@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 type Downloader struct {
@@ -62,5 +64,33 @@ func (d *Downloader) GetLanguages() string {
 }
 
 func (d *Downloader) DownloadSubtitle() {
+	lang := "en"
+	hash := d.GenerateHash()
+	url := d.hostname + "/?action=download&hash=" + hash + "&language=" + lang
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal("Error setting headers for downloading")
+	}
+	req.Header.Set("user-agent", "SubDB/1.0")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		log.Fatal("Error processing request")
+	}
+	defer resp.Body.Close()
+
+	fileName := filepath.Base(d.filePath)
+	strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	subtitleFile := fileName + ".srt"
+
+	f, err := os.Create(subtitleFile)
+	defer f.Close()
+	if err != nil {
+		log.Fatal("error creating file")
+	}
+	if _, err := io.Copy(f, resp.Body); err != nil {
+		log.Fatal("Error downloading subtitle")
+	}
 
 }
