@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -20,8 +21,13 @@ type Downloader struct {
 }
 
 func (d *Downloader) GenerateHash() string {
-
+	readsize := 64 * 1024
 	f, err := os.Open(d.filePath)
+	data, err := ioutil.ReadAll(io.LimitReader(f, int64(readsize)))
+	f.Seek(-int64(readsize), os.SEEK_END)
+	end, err := ioutil.ReadAll(io.LimitReader(f, int64(readsize)))
+	data = append(data, end...)
+
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal("Error reading the file")
@@ -29,8 +35,9 @@ func (d *Downloader) GenerateHash() string {
 	defer f.Close()
 
 	h := md5.New()
+	r := bytes.NewReader(data)
 
-	if _, err := io.Copy(h, f); err != nil {
+	if _, err := io.Copy(h, r); err != nil {
 		log.Fatal("There was an error processing file")
 	}
 	hasBytes := h.Sum(nil)
@@ -67,6 +74,7 @@ func (d *Downloader) DownloadSubtitle() {
 	lang := "en"
 	hash := d.GenerateHash()
 	url := d.hostname + "/?action=download&hash=" + hash + "&language=" + lang
+	fmt.Println("url", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal("Error setting headers for downloading")
@@ -86,11 +94,18 @@ func (d *Downloader) DownloadSubtitle() {
 
 	f, err := os.Create(subtitleFile)
 	defer f.Close()
+	fmt.Print("Response", resp.Body)
+
 	if err != nil {
 		log.Fatal("error creating file")
 	}
-	if _, err := io.Copy(f, resp.Body); err != nil {
-		log.Fatal("Error downloading subtitle")
+	fmt.Println("status message", resp.Status)
+	if resp.StatusCode == 200 {
+		if _, err := io.Copy(f, resp.Body); err != nil {
+			log.Fatal("Error downloading subtitle")
+		}
+	} else {
+		fmt.Println("Subtitle not found... retrying another service")
 	}
 
 }

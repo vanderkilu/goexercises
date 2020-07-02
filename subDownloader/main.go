@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
-	filePath := "/home/vndrkl/Videos/downloadcleaner.mp4"
+	filePath := "/home/vndrkl/Downloads/Video/dexter.mp4.mp4"
 	subDownloader := downloader.NewDownloader(filePath)
 	results := subDownloader.GetLanguages()
+	subDownloader.DownloadSubtitle()
 	fmt.Println(results)
 }
