@@ -2,7 +2,7 @@ package db
 
 import (
 	"encoding/binary"
-	"encoding/json"
+	"time"
 
 	"github.com/boltdb/bolt"
 )
@@ -17,7 +17,7 @@ type Task struct {
 
 func InitDB(path string) error {
 	var err error
-	db, err = bolt.Open(path, 0600, nil)
+	db, err = bolt.Open(path, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return err
 	}
@@ -43,14 +43,8 @@ func AddTask(taskName string) (int, error) {
 		b := tx.Bucket(tasksBucket)
 		id, _ := b.NextSequence()
 		taskId = int(id)
-		task := Task{Id: taskId, Name: taskName}
 
-		buff, err := json.Marshal(task)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(taskId), buff)
+		return b.Put(itob(taskId), []byte(taskName))
 	})
 	if err != nil {
 		return -1, err
@@ -70,7 +64,7 @@ func ListTasks() ([]Task, error) {
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(tasksBucket)
 		cursor := b.Cursor()
-		for k, v := cursor.First(); cursor != nil; k, v = cursor.Next() {
+		for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
 			tasks = append(tasks, Task{
 				Id:   btoi(k),
 				Name: string(v),

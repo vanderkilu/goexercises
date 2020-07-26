@@ -15,8 +15,9 @@ var listCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println("Couldn't retrieve the tasks")
 		} else {
+			fmt.Printf("ID\tValue\n\n")
 			for _, task := range tasks {
-				fmt.Println("%d. %s", task.Id, task.Name)
+				fmt.Printf("%d\t%s\n", task.Id, task.Name)
 			}
 		}
 	},
